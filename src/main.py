@@ -55,16 +55,29 @@ LLffGGLfttffLCGGCCLLftl;;liiflLCLLLLLLLLLLLCCCCf
 """)
     time.sleep(10)
 
-try:
-    ifile = open(filename, "r", newline = "")
-except IOError:
-    print("Uh oh, I don't see " + filename + "!")
-
-reader = csv.reader(ifile)
-
 cont = input("Is " + filename + " correct? type \"Y\" to continue... ")
 if cont.lower() != "y":
     sys.exit(0)
+
+try:
+    ifile = open(filename, "r", newline = "")
+except PermissionError:
+    print("Uh oh, I don't have permission to open" + filename + "! Make sure nothing else is using that file.")
+    print("Nothing written to " + filename + ".")
+    time.sleep(3)
+    exit(1)
+except IOError:
+    print("Uh oh, I don't see " + filename + "!")
+    print("Nothing written to " + filename + ".")
+    time.sleep(3)
+    exit(1)
+except:
+    print("Uh oh, something went wrong while opening" + filename + "!")
+    print("Nothing written to " + filename + ".")
+    time.sleep(3)
+    exit(1)
+
+reader = csv.reader(ifile)
 
 
 
@@ -76,6 +89,8 @@ OA_count = 0
 
 summative_column = 0
 exam_column = 0
+average_column = 0
+found_header = False
 
 students = []
 
@@ -86,51 +101,104 @@ grade = {
 "3-": 72, "-3": 72, "3": 75, "3+": 78, "+3": 78,
 "4--": 80, "4-": 85, "4": 90, "4+": 95, "4++": 100,
 "--4": 80, "-4": 85, "+4": 95, "++4": 100,
-"5": 100,
-"A": 0
+"5": 100
 }
+
+def put_record(row, cell, record):
+    try:
+        row[cell] = record
+    except IndexError:
+        row.insert(cell, record)
 
 csv_contents = []
 
 for row in reader:
     
+    try:
+        row[0]
+    except IndexError:
+        row = [""]
+    
     # Find which columns have headers of "O.A"
-    if rownum == 0:
+    if row[0].lower() == "type":
+        found_header = True
         cellnum = 0
         for cell in row:
-            cell = cell.lower()
-            if cell == "o.a" or cell == "oa" or cell == "o.a.":
+            
+            if cell.lower() == "o.a" or cell.lower() == "oa" or cell.lower() == "o.a.":
                 OA_columns.append(cellnum)
-                OA_count += 1
-            elif cell == "s":
+                
+            elif cell.lower() == "s":
                 summative_column = cellnum
-            elif cell == "e":
+                    
+            elif cell.lower() == "e":
                 exam_column = cellnum
+                average_column = cellnum + 1
+                    
             cellnum += 1
-        row.append("Ave")
-        row.append("Course Ave")
+        
+        put_record(row, average_column, "Term Average")
+        put_record(row, average_column+1, "Total Average")
 
     # Calculate averages for each student using each "O.A" column
-    else:
+    elif found_header:
         average = 0
+        marks = 0
         for cellnum in OA_columns:
-            average += grade[row[cellnum]]
-        average /= OA_count
-        row.append(average)
+            if row[cellnum].lower() != "a":
+                try:
+                    average += grade[row[cellnum]]
+                except KeyError:
+                    print("I found something that didn't look like a mark in cell "
+                          + str(cellnum) + " for student " + row[1] + " " + row[0])
+                else:
+                    marks += 1
+        average /= marks
+        put_record(row, average_column, average)
         
-        summative = grade[row[summative_column]] * 0.1
-        exam = grade[row[exam_column]] * 0.2
-        ave = average * 0.7
+        summative = exam = 0
         
-        row.append(summative + exam + ave)
+        if row[summative_column].lower() != "a" and row[exam_column].lower() != "a":
+            try:
+                summative = grade[row[summative_column]] * 0.1
+            except KeyError:
+                print("I found something that didn't look like a mark in an exam column.")
+                summative = average * 0.1
+                
+            try:
+                exam = grade[row[exam_column]] * 0.2
+            except KeyError:
+                print("I found something that didn't look like a mark in an exam column.")
+                exam = average * 0.2
+                
+            average *= 0.7
+        
+        put_record(row, average_column+1, summative + exam + average)
 
     csv_contents.append(row)
     rownum += 1
 
 ifile.close()
 
-open(filename, "w").close() #delete contents of file
-ofile = open(filename, "w", newline = "")
+try:
+    open(filename, "w").close() #delete contents of file
+    ofile = open(filename, "w", newline = "")
+except PermissionError:
+    print("Uh oh, I don't have permission to open" + filename + "! Make sure nothing else is using that file.")
+    print("Nothing written to " + filename + ".")
+    time.sleep(3)
+    exit(1)
+except IOError:
+    print("Uh oh, I don't see " + filename + "!")
+    print("Nothing written to " + filename + ".")
+    time.sleep(3)
+    exit(1)
+except:
+    print("Uh oh, something went wrong while opening" + filename + "!")
+    print("Nothing written to " + filename + ".")
+    time.sleep(3)
+    exit(1)
+
 writer = csv.writer(ofile)
 
 for row in csv_contents:
