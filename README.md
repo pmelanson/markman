@@ -46,6 +46,8 @@ the following conversions to percentage points:
     4--: 80, 4-: 85, 4: 90, 4+: 95, 4++: 100,
     5: 100
 
+The reverse of any mark is also valid. For example, `--4` and `4--` are equivalent.
+
 Calculation
 -----------
 
