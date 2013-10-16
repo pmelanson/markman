@@ -93,7 +93,7 @@ would be the result:
 
 Note that the summative mark now counts, in addition to the new exam mark. Also
 note how the mark in `O.A1` was replaced by the mark in `E1`, as explained in
-the **Exam mark substitution**.
+the previous *Exam mark substitution* section.
 
 Attribution
 ===========
