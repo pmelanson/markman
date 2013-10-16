@@ -1,11 +1,7 @@
-# TODO: find out how to round output to two decimal places
-# TODO: give a summary of the GPL v2
-
-
 """
 Program created by Patrick Melanson, 2013
 Contact: patrick.melanstone@gmail.com
-Licensed under the GPL v2 license. See accompanying LICENSE file
+Licensed under the MIT license. See accompanying LICENSE.txt file
 """
 import csv
 from time import sleep
@@ -94,8 +90,6 @@ except:
 
 reader = csv.reader(ifile)
 
-
-
 grade = {
     "r-": 25, "-r": 25, "r": 35, "r+": 45, "+r": 45,
     "1-": 52, "-1": 52, "1": 55, "1+": 58, "+1": 58,
@@ -162,7 +156,7 @@ class MarkMan():
         except ZeroDivisionError:
             return None
         
-        return ave
+        return round(ave, 2)
 
 
 course = MarkMan("O.A")
