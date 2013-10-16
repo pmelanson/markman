@@ -144,7 +144,7 @@ class MarkMan():
         """
         ave = n = 0
         for mark in self.marks.values():
-            if mark != "a" or mark != "":
+            if mark != "a" and mark != "":
                 try:
                     ave += grade[mark]
                     n += 1
