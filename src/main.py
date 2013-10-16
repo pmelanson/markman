@@ -7,12 +7,10 @@ import csv
 from time import sleep
 
 
-filename = input("Type in the filename of the .csv file you have placed \
-next to this program: ")
+filename = input("Type filename of .csv file you placed with this program: ")
 while (filename[-3:]) != "csv":
     print("The file must be a .csv file")
-    filename = input("Type in the filename of the .csv file you have placed \
-next to this program: ")
+    filename= input("Type filename of .csv file you placed with this program: ")
 
 if filename.casefold() == "harriz.csv":
     print("""
@@ -156,7 +154,7 @@ class MarkMan():
         except ZeroDivisionError:
             return None
         
-        return round(ave, 2)
+        return ave
 
 
 course = MarkMan("O.A")
@@ -196,8 +194,18 @@ for row in reader:
         summative.find_marks(row)
         exam.find_marks(row)
         
-        row.append(course.average())
-        
+        if course.average() != None:
+            row.append(round(course.average(), 2))
+        else:
+            row.append("")
+        if summative.average() != None:
+            row.append(round(summative.average(), 2))
+        else:
+            row.append("")
+        if exam.average() != None:
+            row.append(round(exam.average(), 2))
+        else:
+            row.append("")
         """
         If the exam mark for a strand is greater than the course mark,
         overwrite the course mark with the exam mark
@@ -209,10 +217,24 @@ for row in reader:
             except KeyError:
                 break
         
-        if summative.average() != None and exam.average() != None:
-            row.append(course.average()*0.7 +
-                       summative.average()*0.1 +
-                       exam.average()*0.2)
+        if summative.average() != None and\
+           exam.average() != None and\
+           course.average() != None:
+            row.append(round(
+                             course.average()*0.7 +
+                             summative.average()*0.1 +
+                             exam.average()*0.2,
+                             2))
+        elif summative.average() != None and\
+             course.average() != None:
+            row.append(round(
+                             course.average()*0.7 +
+                             summative.average()*0.3,
+                             2))
+        elif course.average() != None:
+            row.append(round(
+                             course.average(),
+                             2))
     
     elif row[0].casefold().strip() == "type":
         """
@@ -225,8 +247,10 @@ for row in reader:
         summative.find_headers(row)
         exam.find_headers(row)
         
-        row.append("Term Average")
-        row.append("Total Average")
+        row.append("Term Mark")
+        row.append("Summative Mark")
+        row.append("Exam Mark")
+        row.append("Final Mark")
         
     csv_contents.append(row)
 
