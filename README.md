@@ -2,7 +2,7 @@ markman
 =======
 
 This program takes an input of a properly-formatted *.csv file that contains
-student marks, then appends a course average and total average to each student record.
+student marks, then appends marks (course, summative, exam, and final) to each student record.
 
 Format
 ------
@@ -16,7 +16,7 @@ Type,[header],[O.Ax],[Sx],[Ex]
 ```
 
 `[anything]`: the beginning of the spreadsheet, precedes the header row. Can
-include anything *but* a row whose first cell is "Type", like the header row.
+include anything *but* a row whose first cell is `Type`, like the header row.
 
 `Type`: case-insensitive and whitespace padding-insensitive. This cell marks
 the beginning of the header row.
@@ -57,43 +57,44 @@ If the exam mark for a unit is higher than the course mark for a unit, the
 average calculations will use the exam mark for that unit instead of the
 course mark. The reverse is not true. For example, if a student has
 
-    O.A1,   E2
-    2-,     5
+    Type,   O.A1,   S1, E1,
+    Name,   -2,     3,  5
 
 The course mark will be replaced by a `5`, giving:
 
-    O.A1,   E2, "Course Ave",   "Total Ave"
-    2-,     5,  100,            100
+    Type,   O.A1,   S1, E1, Term Mark,  Summative Mark, Exam Mark,  Final Mark
+    Name,   -2,     3,  5,  62.0,       100.0,          100.0,      100.0
 
 However, the exam mark cannot be replaced by a course mark. For example, if a
 student has
 
-    O.A1,   E2
-    5,      1-
+    Type,   O.A1,   S1, E1
+    Name,   5,      3,  -1
 
 The result will be:
 
-    O.A1,   E2, "Course Ave",   "Total Ave"
-    4++,    1-, 100,            76
+    Type,   O.A1,   S1, E1, Term Mark,  Summative Mark, Exam Mark,  Final Mark
+    Name,   5,      3,  -1, 100.0,      75.0,           52.0,       87.9
 
-### Summative and Exam
+### Mark Weighting
 
-The summative and exam must both have at least one mark each to be counted.
-For example:
+This table shows how a student with a mark in everything would be calculated.
+The course mark counts for 70%, the summative for 10%, and the exam for 20%:
 
-    O.A1,   S1, E1, "Course Ave",   "Total Ave"
-    3+      5,  A,  78,             78
+    Type,   O.A1,   S1, E1, Term Mark,  Summative Mark, Exam Mark,  Final Mark
+    Name,   5,      3,  4+, 100.0,      75.0,           95.0,       96.5
 
-Notice how the summative mark was not counted in calculating the total average,
-since the exam had no mark (an `A`). If we were to give the exam a mark, this
-would be the result:
+This table shows how a student with a mark in everything except the exam
+would be calculated. The course mark counts for 70% and the summative mark for 30%:
 
-    O.A1,   S1, E1, "Course Ave",   "Total Ave"
-    3+      5,  5,  100,             100
+    Type,   O.A1,   S1, E1, Term Mark,  Summative Mark, Exam Mark,  Final Mark
+    Name,   5,      3,  A,  100.0,      75.0,           ,           92.5
 
-Note that the summative mark now counts, in addition to the new exam mark. Also
-note how the mark in `O.A1` was replaced by the mark in `E1`, as explained in
-the previous *Exam mark substitution* section.
+This table shows how a student with only a course mark would be calculated.
+The course mark counts for 100%:
+
+    Type,   O.A1,   S1, E1, Term Mark,  Summative Mark, Exam Mark,  Final Mark
+    Name,   5,      A,  A,  100.0,      ,               ,           100.0
 
 Attribution
 ===========
