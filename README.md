@@ -101,6 +101,6 @@ Attribution
 
 Created by Patrick Melanson, 2013
 
-Contact: patrick.melanstone@gmail.com
+Contact: patrickpowns@gmail.com
 
 Licensed under the MIT license. See accompanying LICENSE file
