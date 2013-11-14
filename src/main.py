@@ -12,7 +12,7 @@ while (filename[-3:]) != "csv":
     print("The file must be a .csv file")
     filename= input("Type filename of .csv file you placed with this program: ")
 
-if filename.casefold() == "harriz.csv":
+if filename.lower() == "harriz.csv":
     print("""
     CCCGGCCCGG@@@@@@LGLGGGCCGG@@@G@@@GGCCCCLLLLLLLLC
     GCGCGCCCG@@@@@@@@@GGG@@@@@@@G@@@@@GCCLLCLCLCLLCC
@@ -62,33 +62,55 @@ if filename.casefold() == "harriz.csv":
     exit(3141)
 
 cont = input("Is " + filename + " correct? type \"Y\" to continue... ")
-if cont.casefold() != "y":
+if cont.lower() != "y":
     print("Input was not \"Y\", exiting...")
-    sleep(3)
+    input("Press enter to continue...")
     exit(1)
 
 try:
     ifile = open(filename, "r", newline = "")
-except PermissionError:
+except PermissionError:     # Triggers on a permissions error, usually when
+                            # the file is open in another program
     print("Uh oh, I don't have permission to open" + filename +
           "! Make sure nothing else is using that file.")
     print("Nothing written to " + filename + ".")
-    sleep(4)
+    input("Press enter to continue...")
     exit(1)
-except IOError:
+except IOError:             # Triggers on a read error
     print("Uh oh, I don't see " + filename + "!")
     print("Nothing written to " + filename + ".")
-    sleep(4)
+    input("Press enter to continue...")
     exit(1)
-except:
+except:                     # Triggers on any other error
     print("Uh oh, something went wrong while opening" + filename + "!")
     print("Nothing written to " + filename + ".")
-    sleep(4)
+    input("Press enter to continue...")
     exit(1)
 
-reader = csv.reader(ifile)
 
-grade = {
+delim_count = {";": 0, ",": 0, "\t": 0}
+
+for line in ifile.readlines():
+    for delimiter in delim_count.keys():
+        delim_count[delimiter] += line.count(delimiter)
+
+delim = ";"
+
+for delimiter in delim_count:
+    if delim_count[delim] < delim_count[delimiter]:
+            delim = delimiter
+
+print("It looks like " + delim + " is the delimiter, with " +
+      str(delim_count[delim]) + " occurences")
+
+reader = csv.reader(ifile, delimiter=delim)  # A class that contains functions to read the file
+
+ifile.seek(0)   # Return read cursor to beginning of file
+
+
+
+
+grade = {   # A python "dict"
     "r-": 25, "-r": 25, "r": 35, "r+": 45, "+r": 45,
     "1-": 52, "-1": 52, "1": 55, "1+": 58, "+1": 58,
     "2-": 62, "-2": 62, "2": 65, "2+": 68, "+2": 68,
@@ -98,47 +120,74 @@ grade = {
     "5": 100
 }
 
+#===============================================================================
+# In python, a "dict" is an array of key/value pairs, where the key is a string
+# 
+# e.g.:
+# 
+# grade["4--"] == 80    # True
+# 
+# grade["--4"] == 80    # True
+#===============================================================================
+
 class MarkMan():
     
     def __init__(self, header_string):
-        self.header_string = header_string.casefold().strip()
+        self.header_string = header_string.lower().strip()
     
     headers = {}
+    #===========================================================================
+    # self.headers is a dict where the key is a unit number and the value is
+    # the index at which that unit's column is found. See self.find_headers.
+    #===========================================================================
+    
     marks = {}
+    #===========================================================================
+    # self.marks is a dict that stores the mark in each unit for a student.
+    # e.g.
+    # self.marks = {["1", 4+], ["2", 3]}
+    # means the student got a 4+ in unit 1 and a 3 in unit 2
+    #===========================================================================
     
     def find_headers(self, row):
         """
-        Builds an index of the column number of each relevant header,\
-        and which unit it corresponds to
+        When passed the header row, finds the columns that correspond
+        to self.header_string and then stores the index of each unit
+        ["Type", "S1", "O.A1", "E1", "O.A2"]
+        and self.header_string == "O.A"
+        self.headers will become
+        {["1": 2], ["2": 4]}
+        since O.A, unit 1, is in row[2] and O.A, unit 2, is in row[4].
         """
         self.headers = {}
         i = 0
         for cell in row:
-            cell = cell.casefold()
-            if cell.startswith(self.header_string):
-                key = cell.strip().strip(self.header_string)
-                if key.isdigit() == False:
+            cell = cell.lower()
+            if cell.startswith(self.header_string) and\
+               cell != "summative mark" and\
+               cell != "exam mark":
+                unit = cell.strip().strip(self.header_string)
+                if unit.isdigit() == False:
                     print("The header \"" + cell + "\" contains \""
-                          + self.header_string + "\" and \"" + key
-                          + "\" where \"" + key + "\" is not a number, \
+                          + self.header_string + "\" and \"" + unit
+                          + "\" where \"" + unit + "\" is not a number, \
                           skipping this header...")
                 else:
-                    self.headers[key] = i
+                    self.headers[unit] = i
             i += 1
     
-    
     def find_marks(self, row):
-        """
-        Method 'find_headers' must have been run prior to calling this
-        """
+        """self.find_headers must have been run prior to calling this."""
         self.marks = {}
-        for key in self.headers:
-            self.marks[key] = row[self.headers[key]].casefold()
+        for unit in self.headers:
+            self.marks[unit] = row[self.headers[unit]].lower()
     
     
     def average(self):
         """
-        Method 'find_marks' must have been run prior to calling this
+        self.find_marks must have been run prior to calling this.
+        Returns the average of of all the marks in self.marks.
+        Returns None if there are no marks in self.marks
         """
         ave = n = 0
         for mark in self.marks.values():
@@ -147,7 +196,8 @@ class MarkMan():
                     ave += grade[mark]
                     n += 1
                 except KeyError:
-                    print("I found the mark " + mark +
+                    print("I found the mark " + mark + " under category " +
+                          self.header_string +
                           ", which I don't understand, skipping that mark.")
         try:
             ave /= n
@@ -236,7 +286,7 @@ for row in reader:
                              course.average(),
                              2))
     
-    elif row[0].casefold().strip() == "type":
+    elif row[0].lower().strip() == "type":
         """
         This block is triggered by the header row, identified by the first cell
         being "Type", case-insensitive and whitespace padding-insensitive
@@ -262,29 +312,29 @@ Write contents to file
 """
 if found_header == False:
     print("Uh oh, I couldn't find the header in " + filename + "!")
-    print("Make sure the .csv file is comma-delimited, not tab-delimited")
+    print("Make sure the .csv file is delimited consistently")
     print("Nothing written to " + filename + ".")
-    sleep(4)
+    input("Press enter to continue...")
     exit(1)
 
 try:
     open(filename, "w").close() # Delete contents of file
     ofile = open(filename, "w", newline = "")
 except PermissionError:
-    print("Uh oh, I don't have permission to open" + filename
+    print("Uh oh, I don't have permission to open " + filename
           + "! Make sure nothing else is using that file.")
     print("Nothing written to " + filename + ".")
-    sleep(4)
+    input("Press enter to continue...")
     exit(1)
 except IOError:
     print("Uh oh, I don't see " + filename + "!")
     print("Nothing written to " + filename + ".")
-    sleep(4)
+    input("Press enter to continue...")
     exit(1)
 except:
-    print("Uh oh, something went wrong while opening" + filename + "!")
+    print("Uh oh, something went wrong while opening " + filename + "!")
     print("Nothing written to " + filename + ".")
-    sleep(4)
+    input("Press enter to continue...")
     exit(1)
 
 writer = csv.writer(ofile)
@@ -295,4 +345,4 @@ for row in csv_contents:
 ofile.close()
 
 print("Averages calculated!")
-sleep(3)
+input("Press enter to exit...")
